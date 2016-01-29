@@ -1,2 +1,2 @@
 # sdlmame-os2
-SDLMAME for OS/2
+Issue tracker for SDLMAME for OS/2
