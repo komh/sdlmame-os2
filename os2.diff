@@ -1,0 +1,52 @@
+diff -uNr -b scripts/genie.lua.org scripts/genie.lua
+--- scripts/genie.lua.org	2016-01-27 09:14:58.000000000 +0900
++++ scripts/genie.lua	2016-01-29 18:03:42.000000000 +0900
+@@ -478,6 +478,11 @@
+ 		"Optimize",
+ 	}
+ 
++configuration { "os2" }
++	flags {
++		"NoPCH",
++	}
++
+ configuration {}
+ 
+ msgcompile ("Compiling $(subst ../,,$<)...")
+diff -uNr -b src/emu/luaengine.cpp.org src/emu/luaengine.cpp
+--- src/emu/luaengine.cpp.org	2016-01-27 09:15:02.000000000 +0900
++++ src/emu/luaengine.cpp	2016-01-29 22:36:36.000000000 +0900
+@@ -1023,8 +1023,12 @@
+ 
+ void lua_engine::start_console()
+ {
++#ifndef __OS2__
+ 	std::thread th(::serve_lua, this);
+ 	th.detach();
++#else
++	_beginthread(reinterpret_cast<void (*)(void *)>(::serve_lua), NULL, 1024 * 1024, this);
++#endif
+ }
+ 
+ //-------------------------------------------------
+diff -uNr -b src/osd/sdl/input.cpp.org src/osd/sdl/input.cpp
+--- src/osd/sdl/input.cpp.org	2016-01-27 09:15:10.000000000 +0900
++++ src/osd/sdl/input.cpp	2016-01-29 16:07:22.000000000 +0900
+@@ -1743,7 +1743,7 @@
+ 			if (event.key.keysym.sym < 0x20)
+ 				machine.ui_input().push_char_event(sdl_window_list->target(), event.key.keysym.sym);
+ #else
+-			ui_input_push_char_event(machine, sdl_window_list->target(), (unicode_char) event.key.keysym.unicode);
++			machine.ui_input().push_char_event(sdl_window_list->target(), (unicode_char) event.key.keysym.unicode);
+ #endif
+ 			break;
+ 		case SDL_KEYUP:
+@@ -1918,7 +1918,7 @@
+ 			if (!event.active.gain)
+ 			{
+ 				sdl_window_info *window = GET_FOCUS_WINDOW(&event.motion);
+-				ui_input_push_mouse_leave_event(machine, window->target());
++				machine.ui_input().push_mouse_leave_event(window->target());
+ 			}
+ 			break;
+ 		case SDL_QUIT:
